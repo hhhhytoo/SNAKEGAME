@@ -1,71 +1,582 @@
-<script>
-    // ... (keep all your game variables and functions, but replace the leaderboard parts)
-
-    // Backend API URL
-    const API_URL = 'https://snake-backend.onrender.com/api/scores'; // <-- CHANGE THIS
-
-    // High scores (now fetched from backend)
-    let highScores = [];
-
-    // Fetch scores on load
-    async function fetchScores() {
-        try {
-            const res = await fetch(API_URL);
-            highScores = await res.json();
-            renderLeaderboard();
-        } catch (err) {
-            console.error('Failed to fetch scores', err);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake Game – Personalized & Leaderboard</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(145deg, #0f2027, #203a43, #2c5364);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
         }
-    }
-
-    // Add score (POST to backend)
-    async function addScore(name, score) {
-        try {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, score })
-            });
-            highScores = await res.json();
-            renderLeaderboard();
-        } catch (err) {
-            console.error('Failed to save score', err);
+        .game-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-    }
-
-    // Update leaderboard display
-    function renderLeaderboard() {
-        if (highScores.length === 0) {
-            scoreListEl.innerHTML = '<li style="justify-content: center; opacity:0.7;">No scores yet</li>';
-            return;
+        .game-wrapper {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(4px);
+            padding: 20px;
+            border-radius: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        let html = '';
-        highScores.forEach((entry, idx) => {
-            const date = new Date(entry.date).toLocaleDateString();
-            html += `<li>
-                <span>${idx+1}. ${entry.name}</span>
-                <span class="score-entry">${entry.score} <span class="date">${date}</span></span>
-            </li>`;
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: #1e2b3a;
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        .score-board {
+            color: #a8e6cf;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 15px;
+            text-shadow: 0 0 10px #4ecca3;
+            letter-spacing: 2px;
+        }
+        /* Leaderboard panel */
+        .leaderboard {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 30px;
+            padding: 20px;
+            min-width: 250px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            height: fit-content;
+        }
+        .leaderboard h2 {
+            text-align: center;
+            font-weight: 600;
+            font-size: 28px;
+            margin: 0 0 15px;
+            background: linear-gradient(135deg, #f6d365, #fda085);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 10px;
+        }
+        .leaderboard ol {
+            padding-left: 20px;
+            margin: 0;
+            font-size: 18px;
+        }
+        .leaderboard li {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 4px;
+        }
+        .leaderboard .score-entry {
+            color: #ffd93d;
+            font-weight: 600;
+        }
+        .leaderboard .date {
+            font-size: 12px;
+            color: #aaa;
+            margin-left: 10px;
+        }
+        /* Name prompt overlay */
+        .name-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .name-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50px;
+            padding: 40px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 25px 50px -8px rgba(0,0,0,0.6);
+            max-width: 400px;
+            width: 90%;
+        }
+        .name-box h2 {
+            font-size: 36px;
+            margin: 0 0 20px;
+            background: linear-gradient(135deg, #a8e6cf, #d4edfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .name-box input {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50px;
+            padding: 15px 25px;
+            font-size: 20px;
+            color: white;
+            width: 80%;
+            outline: none;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+        }
+        .name-box input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        .name-box button {
+            background: #4ecca3;
+            border: none;
+            color: #1a2a3a;
+            font-size: 24px;
+            font-weight: 700;
+            padding: 12px 40px;
+            border-radius: 50px;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 0 20px #4ecca3;
+            font-family: 'Poppins', sans-serif;
+        }
+        .name-box button:hover {
+            transform: scale(1.05);
+            background: #6de5b6;
+        }
+        /* Game over overlay (glass icon) */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .overlay.active {
+            display: flex;
+        }
+        .gameover-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50px;
+            padding: 40px 60px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 25px 50px -8px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.2);
+            animation: float 3s infinite ease-in-out;
+            max-width: 500px;
+            width: 90%;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .gameover-box h1 {
+            font-size: 48px;
+            margin: 0 0 10px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 5px 15px rgba(255,107,107,0.4);
+            letter-spacing: 2px;
+        }
+        .gameover-box p {
+            font-size: 24px;
+            margin: 10px 0;
+            font-weight: 400;
+        }
+        .gameover-box .taunt {
+            font-style: italic;
+            font-size: 32px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 60px;
+            display: inline-block;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin: 20px 0;
+            color: #ffeaa7;
+        }
+        .buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+        .glass-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 40px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.5);
+        }
+        .glass-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1) rotate(5deg);
+            border-color: white;
+            box-shadow: 0 0 25px #4ecca3;
+        }
+        .glass-btn i {
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+        #finalScore {
+            font-weight: 700;
+            color: #ffd93d;
+        }
+        .current-player {
+            margin-top: 10px;
+            text-align: center;
+            color: #a8e6cf;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-wrapper">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div class="score-board">🍎 Score: <span id="score">0</span></div>
+            <div class="current-player" id="playerDisplay"></div>
+        </div>
+        <div class="leaderboard" id="leaderboardPanel">
+            <h2><i class="fas fa-crown"></i> Hall of Fame</h2>
+            <ol id="scoreList">
+                <li style="justify-content: center; opacity:0.7;">No scores yet</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Name Prompt Overlay -->
+    <div id="nameOverlay" class="name-overlay">
+        <div class="name-box">
+            <h2>🐍 Enter Your Name</h2>
+            <input type="text" id="playerNameInput" placeholder="Challenger" maxlength="20">
+            <button id="startGameBtn">Start Game</button>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="gameOverlay" class="overlay">
+        <div class="gameover-box">
+            <h1>GAME OVER</h1>
+            <p>Final score: <span id="finalScore">0</span></p>
+            <div class="taunt" id="tauntMessage">😏 Is this your best?</div>
+            <div class="buttons">
+                <button class="glass-btn" id="replayBtn" title="Play Again">
+                    <i class="fas fa-undo-alt"></i>
+                </button>
+                <button class="glass-btn" id="quitBtn" title="Give Up">
+                    <i class="fas fa-door-open"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- Game setup ----------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreSpan = document.getElementById('score');
+        const overlay = document.getElementById('gameOverlay');
+        const finalScoreSpan = document.getElementById('finalScore');
+        const tauntElement = document.getElementById('tauntMessage');
+        const playerDisplay = document.getElementById('playerDisplay');
+        const nameOverlay = document.getElementById('nameOverlay');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const scoreListEl = document.getElementById('scoreList');
+
+        // Player name
+        let playerName = localStorage.getItem('snakePlayerName') || '';
+
+        // If name exists, hide overlay immediately
+        if (playerName) {
+            nameOverlay.style.display = 'none';
+            playerDisplay.textContent = `🎮 Playing as: ${playerName}`;
+        } else {
+            nameOverlay.style.display = 'flex';
+        }
+
+        // Start game button
+        startGameBtn.addEventListener('click', () => {
+            let name = playerNameInput.value.trim();
+            if (name === '') name = 'Challenger';
+            playerName = name;
+            localStorage.setItem('snakePlayerName', playerName);
+            nameOverlay.style.display = 'none';
+            playerDisplay.textContent = `🎮 Playing as: ${playerName}`;
         });
-        scoreListEl.innerHTML = html;
-    }
 
-    // Modify your endGame function to call addScore instead of localStorage
-    function endGame() {
-        gameOver = true;
-        finalScoreSpan.textContent = score;
-        // Save score to backend
-        addScore(playerName || 'Anonymous', score);
-        // ... rest of your taunt logic (same as before)
-        const randomIndex = Math.floor(Math.random() * tauntTemplates.length);
-        let taunt = tauntTemplates[randomIndex];
-        taunt = taunt.replace(/{name}/g, playerName || 'Challenger');
-        tauntElement.textContent = taunt;
-        overlay.classList.add('active');
-    }
+        // Allow Enter key in input
+        playerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') startGameBtn.click();
+        });
 
-    // Initial fetch
-    fetchScores();
+        // Array of random challenging phrases (with {name} placeholder)
+        const tauntTemplates = [
+            "😏 Is this your best, {name}?",
+            "🤔 That all you got, {name}?",
+            "💪 You can do better, {name}!",
+            "😜 Even a snail moves faster than you, {name}...",
+            "🔥 Need a boost, {name}?",
+            "👀 Was that deliberate, {name}?",
+            "😈 I've seen better from a caterpillar, {name}.",
+            "🙄 Seriously, {name}? That's your high score?",
+            "😎 My grandmother plays better than you, {name}.",
+            "🕹️ Maybe try a different game, {name}?",
+            "💀 R.I.P. snake... and your pride, {name}.",
+            "🍼 Do you need a tutorial, {name}?",
+            "🐍 The snake is embarrassed for you, {name}.",
+            "🎮 Game over... obviously, {name}.",
+            "📉 Downward spiral much, {name}?",
+            "😱 Ouch, that had to hurt, {name}.",
+            "✨ You'll get 'em next time... maybe, {name}.",
+            "🥱 I'm not impressed, {name}.",
+            "🤷‍♂️ It's okay to quit now, {name}.",
+            "🏆 Scoreboard says: not great, {name}."
+        ];
 
-    // ... rest of your game code (move, draw, etc.) remains exactly the same
-</script>
+        // High scores (load from localStorage)
+        let highScores = [];
+        try {
+            const stored = localStorage.getItem('snakeHighScores');
+            if (stored) highScores = JSON.parse(stored);
+        } catch (e) { console.warn("Failed to load scores"); }
+
+        // Update leaderboard display
+        function renderLeaderboard() {
+            if (highScores.length === 0) {
+                scoreListEl.innerHTML = '<li style="justify-content: center; opacity:0.7;">No scores yet</li>';
+                return;
+            }
+            // Sort descending
+            const sorted = [...highScores].sort((a,b) => b.score - a.score).slice(0, 10);
+            let html = '';
+            sorted.forEach((entry, idx) => {
+                const date = new Date(entry.date).toLocaleDateString();
+                html += `<li>
+                    <span>${idx+1}. ${entry.name}</span>
+                    <span class="score-entry">${entry.score} <span class="date">${date}</span></span>
+                </li>`;
+            });
+            scoreListEl.innerHTML = html;
+        }
+
+        // Add score if qualifies
+        function addScoreIfHigh(score) {
+            if (!playerName) playerName = 'Anonymous';
+            const newEntry = {
+                name: playerName,
+                score: score,
+                date: new Date().toISOString()
+            };
+            highScores.push(newEntry);
+            // Sort and keep top 10
+            highScores.sort((a,b) => b.score - a.score);
+            if (highScores.length > 10) highScores = highScores.slice(0, 10);
+            localStorage.setItem('snakeHighScores', JSON.stringify(highScores));
+            renderLeaderboard();
+        }
+
+        // Grid settings
+        const GRID_SIZE = 20;
+        const CELL_SIZE = 20;
+        canvas.width = GRID_SIZE * CELL_SIZE;
+        canvas.height = GRID_SIZE * CELL_SIZE;
+
+        // Snake
+        let snake = [
+            [10, 10],
+            [10, 9],
+            [10, 8]
+        ];
+        let direction = 'RIGHT';
+        let nextDirection = 'RIGHT';
+        let food = [15, 15];
+        let score = 0;
+        let gameOver = false;
+        let gameInterval = null;
+
+        function randomFood() {
+            let newFood;
+            do {
+                newFood = [
+                    Math.floor(Math.random() * GRID_SIZE),
+                    Math.floor(Math.random() * GRID_SIZE)
+                ];
+            } while (snake.some(segment => segment[0] === newFood[0] && segment[1] === newFood[1]));
+            food = newFood;
+        }
+
+        function resetGame() {
+            snake = [
+                [10, 10],
+                [10, 9],
+                [10, 8]
+            ];
+            direction = 'RIGHT';
+            nextDirection = 'RIGHT';
+            score = 0;
+            gameOver = false;
+            updateScore();
+            randomFood();
+            overlay.classList.remove('active');
+        }
+
+        function updateScore() {
+            scoreSpan.textContent = score;
+        }
+
+        function endGame() {
+            gameOver = true;
+            finalScoreSpan.textContent = score;
+            // Add to leaderboard
+            addScoreIfHigh(score);
+            // Pick a random taunt and replace {name}
+            const randomIndex = Math.floor(Math.random() * tauntTemplates.length);
+            let taunt = tauntTemplates[randomIndex];
+            taunt = taunt.replace(/{name}/g, playerName || 'Challenger');
+            tauntElement.textContent = taunt;
+            overlay.classList.add('active');
+        }
+
+        function move() {
+            if (gameOver) return;
+
+            if ((nextDirection === 'UP' && direction !== 'DOWN') ||
+                (nextDirection === 'DOWN' && direction !== 'UP') ||
+                (nextDirection === 'LEFT' && direction !== 'RIGHT') ||
+                (nextDirection === 'RIGHT' && direction !== 'LEFT')) {
+                direction = nextDirection;
+            }
+
+            const head = snake[0].slice();
+            switch (direction) {
+                case 'RIGHT': head[1]++; break;
+                case 'LEFT':  head[1]--; break;
+                case 'UP':    head[0]--; break;
+                case 'DOWN':  head[0]++; break;
+            }
+
+            if (head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE) {
+                endGame();
+                return;
+            }
+
+            if (snake.some(segment => segment[0] === head[0] && segment[1] === head[1])) {
+                endGame();
+                return;
+            }
+
+            snake.unshift(head);
+
+            if (head[0] === food[0] && head[1] === food[1]) {
+                score += 10;
+                updateScore();
+                randomFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#2d4059';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * CELL_SIZE, 0);
+                ctx.lineTo(i * CELL_SIZE, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * CELL_SIZE);
+                ctx.lineTo(canvas.width, i * CELL_SIZE);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#ff6b6b';
+            ctx.shadowColor = '#ff6b6b';
+            ctx.shadowBlur = 15;
+            ctx.fillRect(food[1] * CELL_SIZE, food[0] * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            ctx.shadowBlur = 0;
+
+            snake.forEach((segment, index) => {
+                const [row, col] = segment;
+                if (index === 0) {
+                    ctx.fillStyle = '#4ecca3';
+                    ctx.shadowColor = '#4ecca3';
+                } else {
+                    ctx.fillStyle = '#2b7a62';
+                    ctx.shadowColor = '#2b7a62';
+                }
+                ctx.shadowBlur = 8;
+                ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1);
+            });
+            ctx.shadowBlur = 0;
+        }
+
+        function gameTick() {
+            move();
+            draw();
+        }
+
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+            e.preventDefault();
+            if (key === 'ArrowUp') nextDirection = 'UP';
+            else if (key === 'ArrowDown') nextDirection = 'DOWN';
+            else if (key === 'ArrowLeft') nextDirection = 'LEFT';
+            else if (key === 'ArrowRight') nextDirection = 'RIGHT';
+        });
+
+        // Buttons
+        document.getElementById('replayBtn').addEventListener('click', () => {
+            resetGame();
+        });
+
+        document.getElementById('quitBtn').addEventListener('click', () => {
+            overlay.classList.remove('active');
+            // Game stays frozen
+        });
+
+        // Initial render
+        renderLeaderboard();
+        resetGame();
+        gameInterval = setInterval(gameTick, 150);
+    </script>
+</body>
+</html>
