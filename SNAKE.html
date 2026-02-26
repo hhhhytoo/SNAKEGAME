@@ -366,7 +366,8 @@
 
     <script>
         // ---------- Configuration ----------
-        const API_URL = 'https://snake-backend.onrender.com/api/scores'; // Replace with your actual Render URL
+        // REPLACE WITH YOUR ACTUAL BACKEND URL (Render) – keep the /api/scores part
+        const API_URL = 'https://snake-backend.onrender.com/api/scores'; 
 
         // ---------- DOM Elements ----------
         const canvas = document.getElementById('gameCanvas');
@@ -625,7 +626,7 @@
             draw();
         }
 
-        // ---------- Controls: Keyboard + Touch ----------
+        // ---------- Controls: Keyboard + Touch (FIXED) ----------
         function setDirection(newDir) {
             if (newDir === 'UP' && direction !== 'DOWN') nextDirection = 'UP';
             else if (newDir === 'DOWN' && direction !== 'UP') nextDirection = 'DOWN';
@@ -633,6 +634,7 @@
             else if (newDir === 'RIGHT' && direction !== 'LEFT') nextDirection = 'RIGHT';
         }
 
+        // Keyboard
         document.addEventListener('keydown', (e) => {
             const key = e.key;
             e.preventDefault();
@@ -642,17 +644,30 @@
             else if (key === 'ArrowRight') setDirection('RIGHT');
         });
 
-        // Touch button events
-        btnUp.addEventListener('click', () => setDirection('UP'));
-        btnDown.addEventListener('click', () => setDirection('DOWN'));
-        btnLeft.addEventListener('click', () => setDirection('LEFT'));
-        btnRight.addEventListener('click', () => setDirection('RIGHT'));
+        // Touch buttons – immediate response using mousedown + touchstart
+        function handleButtonPress(dir) {
+            return function(e) {
+                e.preventDefault();  // Stop zoom/scroll
+                setDirection(dir);
+            };
+        }
 
-        // Prevent zoom on double-tap buttons
-        const allBtns = [btnUp, btnDown, btnLeft, btnRight];
-        allBtns.forEach(btn => {
-            btn.addEventListener('touchstart', (e) => e.preventDefault());
-        });
+        if (btnUp) {
+            btnUp.addEventListener('mousedown', handleButtonPress('UP'));
+            btnUp.addEventListener('touchstart', handleButtonPress('UP'), { passive: false });
+        }
+        if (btnDown) {
+            btnDown.addEventListener('mousedown', handleButtonPress('DOWN'));
+            btnDown.addEventListener('touchstart', handleButtonPress('DOWN'), { passive: false });
+        }
+        if (btnLeft) {
+            btnLeft.addEventListener('mousedown', handleButtonPress('LEFT'));
+            btnLeft.addEventListener('touchstart', handleButtonPress('LEFT'), { passive: false });
+        }
+        if (btnRight) {
+            btnRight.addEventListener('mousedown', handleButtonPress('RIGHT'));
+            btnRight.addEventListener('touchstart', handleButtonPress('RIGHT'), { passive: false });
+        }
 
         // Replay / Quit buttons
         document.getElementById('replayBtn').addEventListener('click', () => {
