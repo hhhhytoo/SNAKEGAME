@@ -1,0 +1,71 @@
+<script>
+    // ... (keep all your game variables and functions, but replace the leaderboard parts)
+
+    // Backend API URL
+    const API_URL = 'https://snake-backend.onrender.com/api/scores'; // <-- CHANGE THIS
+
+    // High scores (now fetched from backend)
+    let highScores = [];
+
+    // Fetch scores on load
+    async function fetchScores() {
+        try {
+            const res = await fetch(API_URL);
+            highScores = await res.json();
+            renderLeaderboard();
+        } catch (err) {
+            console.error('Failed to fetch scores', err);
+        }
+    }
+
+    // Add score (POST to backend)
+    async function addScore(name, score) {
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, score })
+            });
+            highScores = await res.json();
+            renderLeaderboard();
+        } catch (err) {
+            console.error('Failed to save score', err);
+        }
+    }
+
+    // Update leaderboard display
+    function renderLeaderboard() {
+        if (highScores.length === 0) {
+            scoreListEl.innerHTML = '<li style="justify-content: center; opacity:0.7;">No scores yet</li>';
+            return;
+        }
+        let html = '';
+        highScores.forEach((entry, idx) => {
+            const date = new Date(entry.date).toLocaleDateString();
+            html += `<li>
+                <span>${idx+1}. ${entry.name}</span>
+                <span class="score-entry">${entry.score} <span class="date">${date}</span></span>
+            </li>`;
+        });
+        scoreListEl.innerHTML = html;
+    }
+
+    // Modify your endGame function to call addScore instead of localStorage
+    function endGame() {
+        gameOver = true;
+        finalScoreSpan.textContent = score;
+        // Save score to backend
+        addScore(playerName || 'Anonymous', score);
+        // ... rest of your taunt logic (same as before)
+        const randomIndex = Math.floor(Math.random() * tauntTemplates.length);
+        let taunt = tauntTemplates[randomIndex];
+        taunt = taunt.replace(/{name}/g, playerName || 'Challenger');
+        tauntElement.textContent = taunt;
+        overlay.classList.add('active');
+    }
+
+    // Initial fetch
+    fetchScores();
+
+    // ... rest of your game code (move, draw, etc.) remains exactly the same
+</script>
