@@ -24,11 +24,10 @@
         }
         .game-container {
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             width: 100%;
-            max-width: 1200px;
+            max-width: 500px;
         }
         .game-wrapper {
             background: rgba(255, 255, 255, 0.05);
@@ -37,8 +36,7 @@
             border-radius: 30px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
-            flex: 1 1 auto;
-            max-width: 500px;
+            width: 100%;
         }
         canvas {
             display: block;
@@ -65,6 +63,7 @@
             color: #a8e6cf;
             font-size: clamp(14px, 4vw, 18px);
         }
+        /* Touch controls */
         .touch-controls {
             display: flex;
             flex-direction: column;
@@ -105,50 +104,136 @@
                 font-size: 30px;
             }
         }
-        .leaderboard {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 30px;
-            padding: 20px;
-            min-width: 250px;
+        /* Leaderboard button */
+        .leaderboard-btn {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid #4ecca3;
             color: white;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            height: fit-content;
-            flex: 0 0 280px;
-        }
-        .leaderboard h2 {
-            text-align: center;
+            font-size: 20px;
             font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 60px;
+            margin: 20px 0 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            width: fit-content;
+        }
+        .leaderboard-btn:hover {
+            background: #4ecca3;
+            color: #1a2a3a;
+        }
+        .leaderboard-btn i {
+            font-size: 24px;
+        }
+        /* Leaderboard modal */
+        .leaderboard-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        .leaderboard-modal.active {
+            display: flex;
+        }
+        .leaderboard-panel {
+            background: rgba(20, 30, 40, 0.95);
+            backdrop-filter: blur(16px);
+            border: 2px solid #4ecca3;
+            border-radius: 40px;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            color: white;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+            position: relative;
+        }
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .leaderboard-header h2 {
             font-size: 28px;
-            margin: 0 0 15px;
+            margin: 0;
             background: linear-gradient(135deg, #f6d365, #fda085);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            border-bottom: 2px solid rgba(255,255,255,0.2);
-            padding-bottom: 10px;
         }
-        .leaderboard ol {
-            padding-left: 20px;
-            margin: 0;
-            font-size: 18px;
+        .close-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 30px;
+            cursor: pointer;
         }
-        .leaderboard li {
-            margin-bottom: 8px;
+        .close-btn:hover {
+            color: white;
+        }
+        .refresh-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #4ecca3;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        .refresh-btn:hover {
+            background: #4ecca3;
+            color: black;
+        }
+        .scores-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .scores-list li {
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px dashed rgba(255,255,255,0.1);
-            padding-bottom: 4px;
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 18px;
         }
-        .leaderboard .score-entry {
+        .scores-list .rank {
+            color: #4ecca3;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+        .scores-list .name {
+            flex: 1;
+        }
+        .scores-list .score {
             color: #ffd93d;
-            font-weight: 600;
+            font-weight: 700;
         }
-        .leaderboard .date {
+        .scores-list .date {
             font-size: 12px;
-            color: #aaa;
+            color: #888;
             margin-left: 10px;
         }
+        .loading-msg, .error-msg {
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+        }
+        /* Name prompt overlay */
         .name-overlay {
             position: fixed;
             top: 0;
@@ -212,6 +297,7 @@
             transform: scale(1.05);
             background: #6de5b6;
         }
+        /* Game over overlay */
         .overlay {
             position: fixed;
             top: 0;
@@ -319,15 +405,34 @@
                 </div>
             </div>
         </div>
-        
-        <div class="leaderboard" id="leaderboardPanel">
-            <h2><i class="fas fa-crown"></i> Global Hall of Fame</h2>
-            <ol id="scoreList">
-                <li style="justify-content: center; opacity:0.7;">Loading...</li>
-            </ol>
+
+        <!-- Leaderboard Button -->
+        <button class="leaderboard-btn" id="showLeaderboardBtn">
+            <i class="fas fa-crown"></i> Show Leaderboard
+        </button>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboardModal" class="leaderboard-modal">
+        <div class="leaderboard-panel">
+            <div class="leaderboard-header">
+                <h2><i class="fas fa-crown"></i> Global Hall of Fame</h2>
+                <button class="close-btn" id="closeLeaderboardBtn">&times;</button>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                <button class="refresh-btn" id="refreshLeaderboardBtn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+            <div id="scoresContainer">
+                <ul class="scores-list" id="scoreList">
+                    <li class="loading-msg">Loading scores...</li>
+                </ul>
+            </div>
         </div>
     </div>
 
+    <!-- Name Prompt Overlay -->
     <div id="nameOverlay" class="name-overlay">
         <div class="name-box">
             <h2>🐍 Enter Your Name</h2>
@@ -336,6 +441,7 @@
         </div>
     </div>
 
+    <!-- Game Over Overlay -->
     <div id="gameOverlay" class="overlay">
         <div class="gameover-box">
             <h1>GAME OVER</h1>
@@ -367,8 +473,15 @@
         const nameOverlay = document.getElementById('nameOverlay');
         const playerNameInput = document.getElementById('playerNameInput');
         const startGameBtn = document.getElementById('startGameBtn');
+        
+        // Leaderboard elements
+        const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
+        const leaderboardModal = document.getElementById('leaderboardModal');
+        const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
+        const refreshLeaderboardBtn = document.getElementById('refreshLeaderboardBtn');
         const scoreListEl = document.getElementById('scoreList');
 
+        // Touch buttons
         const btnUp = document.getElementById('btnUp');
         const btnDown = document.getElementById('btnDown');
         const btnLeft = document.getElementById('btnLeft');
@@ -421,19 +534,38 @@
             "🏆 Scoreboard says: not great, {name}."
         ];
 
-        // ---------- Leaderboard API ----------
+        // ---------- Leaderboard Functions ----------
         let highScores = [];
 
         async function fetchScores() {
+            scoreListEl.innerHTML = '<li class="loading-msg">Loading scores...</li>';
             try {
                 const res = await fetch(API_URL);
-                if (!res.ok) throw new Error('Network error');
+                if (!res.ok) throw new Error(`HTTP error ${res.status}`);
                 highScores = await res.json();
                 renderLeaderboard();
             } catch (err) {
-                console.error('Failed to fetch scores', err);
-                scoreListEl.innerHTML = '<li style="justify-content: center; opacity:0.7;">⚠️ Offline mode</li>';
+                console.error('Failed to fetch scores:', err);
+                scoreListEl.innerHTML = '<li class="error-msg">⚠️ Could not load scores. Check your connection.</li>';
             }
+        }
+
+        function renderLeaderboard() {
+            if (!highScores || highScores.length === 0) {
+                scoreListEl.innerHTML = '<li style="text-align: center; padding: 20px; color: #aaa;">No scores yet. Be the first!</li>';
+                return;
+            }
+            let html = '';
+            highScores.forEach((entry, idx) => {
+                const date = new Date(entry.date).toLocaleDateString();
+                html += `<li>
+                    <span class="rank">${idx+1}.</span>
+                    <span class="name">${entry.name}</span>
+                    <span class="score">${entry.score}</span>
+                    <span class="date">${date}</span>
+                </li>`;
+            });
+            scoreListEl.innerHTML = html;
         }
 
         async function addScore(name, score) {
@@ -445,27 +577,33 @@
                 });
                 if (!res.ok) throw new Error('Network error');
                 highScores = await res.json();
-                renderLeaderboard();
+                // If leaderboard is open, update it
+                if (leaderboardModal.classList.contains('active')) {
+                    renderLeaderboard();
+                }
             } catch (err) {
                 console.error('Failed to save score', err);
             }
         }
 
-        function renderLeaderboard() {
-            if (!highScores || highScores.length === 0) {
-                scoreListEl.innerHTML = '<li style="justify-content: center; opacity:0.7;">No scores yet</li>';
-                return;
+        // Leaderboard modal controls
+        showLeaderboardBtn.addEventListener('click', () => {
+            leaderboardModal.classList.add('active');
+            fetchScores(); // fresh data when opened
+        });
+
+        closeLeaderboardBtn.addEventListener('click', () => {
+            leaderboardModal.classList.remove('active');
+        });
+
+        refreshLeaderboardBtn.addEventListener('click', fetchScores);
+
+        // Close modal when clicking outside (optional)
+        leaderboardModal.addEventListener('click', (e) => {
+            if (e.target === leaderboardModal) {
+                leaderboardModal.classList.remove('active');
             }
-            let html = '';
-            highScores.forEach((entry, idx) => {
-                const date = new Date(entry.date).toLocaleDateString();
-                html += `<li>
-                    <span>${idx+1}. ${entry.name}</span>
-                    <span class="score-entry">${entry.score} <span class="date">${date}</span></span>
-                </li>`;
-            });
-            scoreListEl.innerHTML = html;
-        }
+        });
 
         // ---------- Game Settings ----------
         const GRID_SIZE = 20;
@@ -656,7 +794,6 @@
         });
 
         // ---------- Start ----------
-        fetchScores();
         resetGame();
         gameInterval = setInterval(gameTick, 150);
     </script>
