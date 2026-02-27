@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake – Global Leaderboard + Mobile</title>
-    <!-- Google Fonts & Font Awesome -->
+    <title>Snake – Global Leaderboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -59,7 +58,6 @@
             text-align: center;
             margin-top: 10px;
             text-shadow: 0 0 10px #4ecca3;
-            letter-spacing: 2px;
         }
         .current-player {
             margin-top: 5px;
@@ -67,7 +65,6 @@
             color: #a8e6cf;
             font-size: clamp(14px, 4vw, 18px);
         }
-        /* Touch controls */
         .touch-controls {
             display: flex;
             flex-direction: column;
@@ -95,7 +92,6 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             cursor: pointer;
             transition: 0.1s;
-            -webkit-touch-callout: none;
         }
         .arrow-btn:active {
             background: rgba(78, 204, 163, 0.5);
@@ -109,7 +105,6 @@
                 font-size: 30px;
             }
         }
-        /* Leaderboard */
         .leaderboard {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(8px);
@@ -154,7 +149,6 @@
             color: #aaa;
             margin-left: 10px;
         }
-        /* Name prompt overlay */
         .name-overlay {
             position: fixed;
             top: 0;
@@ -197,7 +191,6 @@
             width: 80%;
             outline: none;
             text-align: center;
-            font-family: 'Poppins', sans-serif;
         }
         .name-box input::placeholder {
             color: rgba(255,255,255,0.6);
@@ -214,13 +207,11 @@
             cursor: pointer;
             transition: 0.3s;
             box-shadow: 0 0 20px #4ecca3;
-            font-family: 'Poppins', sans-serif;
         }
         .name-box button:hover {
             transform: scale(1.05);
             background: #6de5b6;
         }
-        /* Game over overlay */
         .overlay {
             position: fixed;
             top: 0;
@@ -317,7 +308,6 @@
             <div class="score-board">🍎 Score: <span id="score">0</span></div>
             <div class="current-player" id="playerDisplay"></div>
             
-            <!-- Touch controls for mobile -->
             <div class="touch-controls">
                 <div class="arrow-row">
                     <div class="arrow-btn" id="btnUp"><i class="fas fa-arrow-up"></i></div>
@@ -338,7 +328,6 @@
         </div>
     </div>
 
-    <!-- Name Prompt Overlay -->
     <div id="nameOverlay" class="name-overlay">
         <div class="name-box">
             <h2>🐍 Enter Your Name</h2>
@@ -347,7 +336,6 @@
         </div>
     </div>
 
-    <!-- Game Over Overlay -->
     <div id="gameOverlay" class="overlay">
         <div class="gameover-box">
             <h1>GAME OVER</h1>
@@ -365,9 +353,8 @@
     </div>
 
     <script>
-        // ---------- Configuration ----------
-        // REPLACE WITH YOUR ACTUAL BACKEND URL (Render) – keep the /api/scores part
-        const API_URL = 'https://snake-backend.onrender.com/api/scores'; 
+        // ---------- CONFIGURATION ----------
+        const API_URL = 'https://snake-backend.onrender.com/api/scores'; // REPLACE WITH YOUR RENDER URL
 
         // ---------- DOM Elements ----------
         const canvas = document.getElementById('gameCanvas');
@@ -382,13 +369,12 @@
         const startGameBtn = document.getElementById('startGameBtn');
         const scoreListEl = document.getElementById('scoreList');
 
-        // Touch buttons
         const btnUp = document.getElementById('btnUp');
         const btnDown = document.getElementById('btnDown');
         const btnLeft = document.getElementById('btnLeft');
         const btnRight = document.getElementById('btnRight');
 
-        // Player name
+        // ---------- Player Name ----------
         let playerName = localStorage.getItem('snakePlayerName') || '';
 
         if (playerName) {
@@ -411,7 +397,7 @@
             if (e.key === 'Enter') startGameBtn.click();
         });
 
-        // ---------- Taunts with name placeholder ----------
+        // ---------- Taunts ----------
         const tauntTemplates = [
             "😏 Is this your best, {name}?",
             "🤔 That all you got, {name}?",
@@ -435,7 +421,7 @@
             "🏆 Scoreboard says: not great, {name}."
         ];
 
-        // ---------- Global leaderboard (backend) ----------
+        // ---------- Leaderboard API ----------
         let highScores = [];
 
         async function fetchScores() {
@@ -462,7 +448,6 @@
                 renderLeaderboard();
             } catch (err) {
                 console.error('Failed to save score', err);
-                // Still show the leaderboard we have
             }
         }
 
@@ -534,7 +519,6 @@
             gameOver = true;
             finalScoreSpan.textContent = score;
             addScore(playerName || 'Anonymous', score);
-            // Random taunt with name
             const randomIndex = Math.floor(Math.random() * tauntTemplates.length);
             let taunt = tauntTemplates[randomIndex];
             taunt = taunt.replace(/{name}/g, playerName || 'Challenger');
@@ -584,7 +568,6 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Grid
             ctx.strokeStyle = '#2d4059';
             ctx.lineWidth = 0.5;
             for (let i = 0; i <= GRID_SIZE; i++) {
@@ -598,14 +581,12 @@
                 ctx.stroke();
             }
 
-            // Food
             ctx.fillStyle = '#ff6b6b';
             ctx.shadowColor = '#ff6b6b';
             ctx.shadowBlur = 15;
             ctx.fillRect(food[1] * CELL_SIZE, food[0] * CELL_SIZE, CELL_SIZE, CELL_SIZE);
             ctx.shadowBlur = 0;
 
-            // Snake
             snake.forEach((segment, index) => {
                 const [row, col] = segment;
                 if (index === 0) {
@@ -626,7 +607,7 @@
             draw();
         }
 
-        // ---------- Controls: Keyboard + Touch (FIXED) ----------
+        // ---------- Controls ----------
         function setDirection(newDir) {
             if (newDir === 'UP' && direction !== 'DOWN') nextDirection = 'UP';
             else if (newDir === 'DOWN' && direction !== 'UP') nextDirection = 'DOWN';
@@ -634,7 +615,6 @@
             else if (newDir === 'RIGHT' && direction !== 'LEFT') nextDirection = 'RIGHT';
         }
 
-        // Keyboard
         document.addEventListener('keydown', (e) => {
             const key = e.key;
             e.preventDefault();
@@ -644,10 +624,9 @@
             else if (key === 'ArrowRight') setDirection('RIGHT');
         });
 
-        // Touch buttons – immediate response using mousedown + touchstart
         function handleButtonPress(dir) {
             return function(e) {
-                e.preventDefault();  // Stop zoom/scroll
+                e.preventDefault();
                 setDirection(dir);
             };
         }
@@ -669,7 +648,6 @@
             btnRight.addEventListener('touchstart', handleButtonPress('RIGHT'), { passive: false });
         }
 
-        // Replay / Quit buttons
         document.getElementById('replayBtn').addEventListener('click', () => {
             resetGame();
         });
@@ -677,8 +655,8 @@
             overlay.classList.remove('active');
         });
 
-        // ---------- Start the game ----------
-        fetchScores();      // load leaderboard
+        // ---------- Start ----------
+        fetchScores();
         resetGame();
         gameInterval = setInterval(gameTick, 150);
     </script>
