@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake – Pixel Game Over + French Lobby</title>
-    <!-- Google Fonts: Pixel font (Press Start 2P) + French font (Playfair) + UI -->
+    <title>snake game</title>
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Playfair+Display:wght@700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -30,7 +30,6 @@
             width: 100%;
             max-width: 500px;
         }
-        /* Lobby styles */
         .lobby {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -41,9 +40,7 @@
             text-align: center;
             color: white;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            transition: all 0.5s ease;
         }
-        /* Pixel snake logo */
         .pixel-snake-logo {
             display: inline-grid;
             grid-template-columns: repeat(5, 24px);
@@ -69,7 +66,6 @@
             background: #6de5b6;
             box-shadow: 0 0 15px #4ecca3, 0 0 30px #4ecca3;
         }
-        /* French font for title */
         .lobby h1 {
             font-family: 'Playfair Display', serif;
             font-size: 64px;
@@ -85,7 +81,6 @@
             font-size: 18px;
             color: #aaa;
             margin-bottom: 30px;
-            font-family: 'Poppins', sans-serif;
         }
         .lobby .input-group {
             margin: 20px 0;
@@ -100,7 +95,6 @@
             width: 80%;
             outline: none;
             text-align: center;
-            font-family: 'Poppins', sans-serif;
         }
         .lobby input::placeholder {
             color: rgba(255,255,255,0.5);
@@ -131,9 +125,6 @@
             color: #1a2a3a;
             transform: scale(1.05);
         }
-        .lobby-btn i {
-            font-size: 20px;
-        }
         .lobby .leaderboard-link {
             background: none;
             border: 2px solid rgba(255,255,255,0.2);
@@ -143,7 +134,6 @@
             border-color: #4ecca3;
             color: white;
         }
-        /* Game wrapper (hidden initially) */
         .game-wrapper {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(4px);
@@ -164,7 +154,7 @@
             width: 100%;
             height: auto;
             aspect-ratio: 1/1;
-            cursor: pointer; /* Indicate clickable when game over */
+            cursor: pointer;
         }
         .score-board {
             color: #a8e6cf;
@@ -237,7 +227,6 @@
             background: #4ecca3;
             color: black;
         }
-        /* Leaderboard modal (unchanged) */
         .leaderboard-modal {
             position: fixed;
             top: 0;
@@ -345,7 +334,7 @@
 </head>
 <body>
     <div class="game-container">
-        <!-- Lobby Screen with Pixel Snake Logo -->
+        <!-- Lobby Screen -->
         <div id="lobby" class="lobby">
             <div class="pixel-snake-logo">
                 <div class="pixel-row">
@@ -398,7 +387,7 @@
             </div>
         </div>
 
-        <!-- Game Wrapper (hidden initially) -->
+        <!-- Game Wrapper -->
         <div id="gameWrapper" class="game-wrapper">
             <canvas id="gameCanvas" width="400" height="400"></canvas>
             <div class="score-board">🍎 Score: <span id="score">0</span></div>
@@ -616,7 +605,27 @@
         let score = 0;
         let gameOver = false;
         let gameInterval = null;
-        let gameOverTaunt = ''; // Store the taunt for game over screen
+        let gameOverTaunt = '';
+
+        // ----- Color selection based on player name -----
+        function getSnakeColors() {
+            const isYousef = playerName && playerName.toUpperCase() === 'YOUSEF';
+            if (isYousef) {
+                return {
+                    headFill: '#4a90e2',      // Bright blue
+                    headShadow: '#4a90e2',
+                    bodyFill: '#2a5c9e',       // Darker blue
+                    bodyShadow: '#2a5c9e'
+                };
+            } else {
+                return {
+                    headFill: '#4ecca3',       // Bright green
+                    headShadow: '#4ecca3',
+                    bodyFill: '#2b7a62',       // Darker green
+                    bodyShadow: '#2b7a62'
+                };
+            }
+        }
 
         function randomFood() {
             let newFood;
@@ -694,7 +703,6 @@
             }
         }
 
-        // Draw the game or game over screen
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -721,19 +729,20 @@
                 ctx.fillRect(food[1] * CELL_SIZE, food[0] * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 ctx.shadowBlur = 0;
 
-                // Snake with trail
+                // Snake with trail – use colors based on name
+                const colors = getSnakeColors();
                 const snakeLength = snake.length;
                 snake.forEach((segment, index) => {
                     const [row, col] = segment;
                     const opacity = 1 - (index / snakeLength) * 0.8;
                     ctx.globalAlpha = opacity;
                     if (index === 0) {
-                        ctx.fillStyle = '#4ecca3';
-                        ctx.shadowColor = '#4ecca3';
+                        ctx.fillStyle = colors.headFill;
+                        ctx.shadowColor = colors.headShadow;
                         ctx.shadowBlur = 15;
                     } else {
-                        ctx.fillStyle = '#2b7a62';
-                        ctx.shadowColor = '#2b7a62';
+                        ctx.fillStyle = colors.bodyFill;
+                        ctx.shadowColor = colors.bodyShadow;
                         ctx.shadowBlur = 8 * (1 - index / snakeLength);
                     }
                     ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1);
@@ -746,7 +755,6 @@
                 ctx.fillStyle = 'rgba(0,0,0,0.8)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Use pixel font
                 ctx.font = '20px "Press Start 2P", monospace';
                 ctx.fillStyle = '#ff6b6b';
                 ctx.textAlign = 'center';
@@ -758,7 +766,7 @@
 
                 ctx.font = '10px "Press Start 2P", monospace';
                 ctx.fillStyle = '#ffd93d';
-                // Wrap taunt if too long
+                // Wrap taunt
                 let tauntLines = [];
                 let words = gameOverTaunt.split(' ');
                 let line = '';
@@ -808,7 +816,6 @@
 
             let clientX, clientY;
             if (e.touches) {
-                // Touch event
                 clientX = e.touches[0].clientX;
                 clientY = e.touches[0].clientY;
                 e.preventDefault();
@@ -820,7 +827,6 @@
             const canvasX = (clientX - rect.left) * scaleX;
             const canvasY = (clientY - rect.top) * scaleY;
 
-            // Button area
             const buttonX = canvas.width/2 - 80;
             const buttonY = 280;
             const buttonW = 160;
