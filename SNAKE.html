@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>snake game</title>
+    <title>Snake – Special Name Colors</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Playfair+Display:wght@700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* (Same styles as before – keep unchanged) */
         * {
             box-sizing: border-box;
             user-select: none;
@@ -607,24 +608,70 @@
         let gameInterval = null;
         let gameOverTaunt = '';
 
-        // ----- Color selection based on player name -----
+        // ----- Color selection based on player name (case-insensitive) -----
         function getSnakeColors() {
-            const isYousef = playerName && playerName.toUpperCase() === 'YOUSEF';
-            if (isYousef) {
+            const name = (playerName || '').toUpperCase();
+            
+            // Special name colors
+            if (name === 'ALI') {
                 return {
-                    headFill: '#4a90e2',      // Bright blue
-                    headShadow: '#4a90e2',
-                    bodyFill: '#2a5c9e',       // Darker blue
-                    bodyShadow: '#2a5c9e'
-                };
-            } else {
-                return {
-                    headFill: '#4ecca3',       // Bright green
-                    headShadow: '#4ecca3',
-                    bodyFill: '#2b7a62',       // Darker green
-                    bodyShadow: '#2b7a62'
+                    headFill: '#ff4444',
+                    headShadow: '#ff4444',
+                    bodyFill: '#aa2222',
+                    bodyShadow: '#aa2222'
                 };
             }
+            if (name === 'ADAM') {
+                return {
+                    headFill: '#ffffff',
+                    headShadow: '#ffffff',
+                    bodyFill: '#cccccc',
+                    bodyShadow: '#cccccc'
+                };
+            }
+            if (name === 'FIS') {
+                // Flashing colors: cycle every 300ms (approx every 2 frames at 150ms interval)
+                // Use performance.now() or a frame counter. We'll use a simple time-based cycle.
+                const now = Date.now();
+                const cycle = Math.floor(now / 300) % 3; // 0,1,2 repeating every 300ms
+                if (cycle === 0) {
+                    return {
+                        headFill: '#ff4444', // red
+                        headShadow: '#ff4444',
+                        bodyFill: '#aa2222',
+                        bodyShadow: '#aa2222'
+                    };
+                } else if (cycle === 1) {
+                    return {
+                        headFill: '#4a90e2', // blue
+                        headShadow: '#4a90e2',
+                        bodyFill: '#2a5c9e',
+                        bodyShadow: '#2a5c9e'
+                    };
+                } else {
+                    return {
+                        headFill: '#ffffff', // white
+                        headShadow: '#ffffff',
+                        bodyFill: '#cccccc',
+                        bodyShadow: '#cccccc'
+                    };
+                }
+            }
+            if (name === 'YOUSEF') {
+                return {
+                    headFill: '#4a90e2',
+                    headShadow: '#4a90e2',
+                    bodyFill: '#2a5c9e',
+                    bodyShadow: '#2a5c9e'
+                };
+            }
+            // Default green
+            return {
+                headFill: '#4ecca3',
+                headShadow: '#4ecca3',
+                bodyFill: '#2b7a62',
+                bodyShadow: '#2b7a62'
+            };
         }
 
         function randomFood() {
@@ -708,7 +755,6 @@
 
             if (!gameOver) {
                 // Draw normal game
-                // Grid lines
                 ctx.strokeStyle = '#2d4059';
                 ctx.lineWidth = 0.5;
                 for (let i = 0; i <= GRID_SIZE; i++) {
@@ -722,14 +768,13 @@
                     ctx.stroke();
                 }
 
-                // Food
                 ctx.fillStyle = '#ff6b6b';
                 ctx.shadowColor = '#ff6b6b';
                 ctx.shadowBlur = 15;
                 ctx.fillRect(food[1] * CELL_SIZE, food[0] * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 ctx.shadowBlur = 0;
 
-                // Snake with trail – use colors based on name
+                // Snake with trail – get colors every frame (allows flashing)
                 const colors = getSnakeColors();
                 const snakeLength = snake.length;
                 snake.forEach((segment, index) => {
